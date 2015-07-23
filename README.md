@@ -5,6 +5,9 @@ A Variant Caller, Distributed
 
 This README represents the TL;DR docs for avocado. More detailed documentation is under the `docs` folder.
 
+* Url for downloading adam-distribution snapshot
+http://repo.biodtlab.com/service/local/artifact/maven/redirect?r=snapshots&g=org.bdgenomics.avocado&a=avocado-distribution&c=bin&e=tar.gz&v=0.0.3-SNAPSHOT
+
 # Who/What/When/Where/Why avocado?
 
 avocado is a distributed variant caller built on top of the [ADAM format and pipeline](http://www.github.com/bigdatagenomics/adam) and [Apache Spark](http://spark.incubator.apache.org/). Currently, avocado is a research project, that is being built up to production level quality. avocado is open source and is covered by the Apache license.
