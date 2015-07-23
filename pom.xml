@@ -25,6 +25,17 @@
     <hadoop.version>2.2.0</hadoop.version>
     <utils.version>0.2.2</utils.version>
   </properties>
+
+  <distributionManagement>
+    <repository>
+      <id>biodatomics-repo</id>
+      <url>http://repo.biodtlab.com/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>biodatomics-snapshots-repo</id>
+      <url>http://repo.biodtlab.com/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
   
   <modules>
     <module>avocado-core</module>
