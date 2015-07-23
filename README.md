@@ -5,7 +5,7 @@ A Variant Caller, Distributed
 
 This README represents the TL;DR docs for avocado. More detailed documentation is under the `docs` folder.
 
-* Url for downloading adam-distribution snapshot
+* Url for downloading avocado-distribution snapshot
 http://repo.biodtlab.com/service/local/artifact/maven/redirect?r=snapshots&g=org.bdgenomics.avocado&a=avocado-distribution&c=bin&e=tar.gz&v=0.0.3-SNAPSHOT
 
 # Who/What/When/Where/Why avocado?
