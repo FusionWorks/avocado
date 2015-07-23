@@ -18,26 +18,35 @@
 #
 
 # Figure out where AVOCADO is installed
-AVOCADO_REPO="$(cd `dirname $0`/..; pwd)"
+SCRIPT_DIR="$(cd `dirname $0`/..; pwd)"
+AVOCADO_JARS=$("$SCRIPT_DIR"/bin/compute-avocado-jars.sh)
+# Binary distribution
+REPO_DIR="$SCRIPT_DIR/repo"
+if [ ! -d "$REPO_DIR" ]; then
+# Fallback to source directory
+REPO_DIR="$SCRIPT_DIR/avocado-cli/target/appassembler/repo/"
+fi
 
-CLASSPATH=$("$AVOCADO_REPO"/bin/compute-avocado-classpath.sh)
-AVOCADO_JARS=$("$AVOCADO_REPO"/bin/compute-avocado-jars.sh)
-
+# Find the ADAM CLI jar
+AVOCADO_DIR="$REPO_DIR/org/bdgenomics/avocado/"
+num_versions=$(ls ${AVOCADO_DIR} | grep cli | wc -l)
 # Find the AVOCADO CLI jar
-num_versions=$(ls "$AVOCADO_REPO"/avocado-cli/target/appassembler/repo/org/bdgenomics/avocado/avocado-cli | wc -l)
 if [ "$num_versions" -eq "0" ]; then
-  echo "Failed to find avocado-cli jar in $AVOCADO_REPO/avocado-cli/target/appassembler/repo/org/bdgenomics/avocado/avocado-cli"
+  echo "Failed to find avocado-cli jar in ${AVOCADO_DIR}"
   echo "You need to build avocado before running this program."
   exit 1
 fi
 if [ "$num_versions" -gt "1" ]; then
-  versions_list=$(ls "$AVOCADO_REPO"/avocado-cli/target/appassembler/repo/org/bdgenomics/avocado/avocado-cli)
-  echo "Found multiple avocado CLI versions in $AVOCADO_REPO/avocado-cli/target/appassembler/repo/org/bdgenomics/avocado/avocado-cli:"
+  versions_list=$(ls ${AVOCADO_DIR} | grep cli)
+  echo "Found multiple avocado CLI versions in ${AVOCADO_DIR}:"
   echo "$versions_list"
   echo "Please remove all but one."
   exit 1
 fi
-AVOCADO_CLI_JAR=$(ls "$AVOCADO_REPO"/avocado-cli/target/appassembler/repo/org/bdgenomics/avocado/avocado-cli/*/avocado-cli-*.jar)
+
+CLI=$(ls "$AVOCADO_DIR" | grep cli)
+CLI_DIR="${AVOCADO_DIR}/${CLI}"
+AVOCADO_CLI_JAR=$(ls ${CLI_DIR}/*/avocado-cli-*.jar)
 
 if [ -z "$SPARK_HOME" ]; then
   echo "Attempting to use 'spark-submit' on default path; you might need to set SPARK_HOME"
@@ -46,8 +55,12 @@ else
   SPARK_SUBMIT="$SPARK_HOME"/bin/spark-submit
 fi
 
+export HADOOP_USER_NAME=hdfs
+
 # submit the job to Spark
-"$SPARK_SUBMIT" \
+COMMAND=""$SPARK_SUBMIT" \
+  --master yarn \
+  --deploy-mode cluster \
   --class org.bdgenomics.avocado.cli.Avocado \
   --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \
   --conf spark.kryo.registrator=org.bdgenomics.adam.serialization.ADAMKryoRegistrator \
@@ -59,3 +72,6 @@ fi
   --jars "$AVOCADO_JARS" \
   "$AVOCADO_CLI_JAR" \
   "$@"
+"
+echo $COMMAND
+$COMMAND
