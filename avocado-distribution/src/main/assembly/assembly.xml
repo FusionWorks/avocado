@@ -67,6 +67,12 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <directory>../avocado-sample-configs</directory>
+      <outputDirectory>avocado-sample-configs</outputDirectory>
+      <directoryMode>0755</directoryMode>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <directory>../docs</directory>
       <outputDirectory>docs</outputDirectory>
       <includes>
