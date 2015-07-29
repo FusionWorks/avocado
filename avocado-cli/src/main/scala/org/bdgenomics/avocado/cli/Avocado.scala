@@ -184,7 +184,6 @@ class Avocado(protected val args: AvocadoArgs) extends BDGSparkCommand[AvocadoAr
    * by the ADAMSparkCommand shell.
    *
    * @param sc SparkContext for RDDs.
-   * @param job Hadoop Job container for file I/O.
    */
   def run(sc: SparkContext) {
 
@@ -216,10 +215,14 @@ class Avocado(protected val args: AvocadoArgs) extends BDGSparkCommand[AvocadoAr
     log.info("Post-processing variants.")
     val processedGenotypes: RDD[Genotype] = postProcessVariants(calledVariants, stats).flatMap(variantContext => variantContext.genotypes)
 
+    val newPartNum = processedGenotypes.partitioner match {
+      case Some(p) => if (p.numPartitions > 10) p.numPartitions / 10 else 10
+      case None => 10
+    }
     // save variants to output file
     log.info("Writing calls to disk.")
     SaveVariants.time {
-      processedGenotypes.adamParquetSave(args.variantOutput,
+      processedGenotypes.coalesce(newPartNum).adamParquetSave(args.variantOutput,
         args.blockSize,
         args.pageSize,
         args.compressionCodec,
