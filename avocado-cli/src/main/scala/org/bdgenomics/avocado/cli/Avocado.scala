@@ -19,34 +19,21 @@ package org.bdgenomics.avocado.cli
 
 import org.apache.commons.configuration.HierarchicalConfiguration
 import org.apache.commons.configuration.plist.PropertyListConfiguration
-import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{ SparkContext, Logging }
-import org.kohsuke.args4j.{ Option => option, Argument }
-import org.bdgenomics.adam.models.{ VariantContext, ReferenceRegion }
+import org.apache.spark.{Logging, SparkContext}
+import org.bdgenomics.adam.models.VariantContext
 import org.bdgenomics.adam.rdd.ADAMContext._
 import org.bdgenomics.avocado.Timers._
 import org.bdgenomics.avocado.discovery.Explore
 import org.bdgenomics.avocado.genotyping.CallGenotypes
 import org.bdgenomics.avocado.input.Input
 import org.bdgenomics.avocado.models.Observation
-import org.bdgenomics.avocado.preprocessing.Preprocessor
 import org.bdgenomics.avocado.postprocessing.Postprocessor
+import org.bdgenomics.avocado.preprocessing.Preprocessor
 import org.bdgenomics.avocado.stats.AvocadoConfigAndStats
-import org.bdgenomics.formats.avro.{
-  Variant,
-  AlignmentRecord,
-  NucleotideContigFragment,
-  Genotype
-}
-import org.bdgenomics.utils.cli.{
-  BDGSparkCommand,
-  BDGCommandCompanion,
-  ParquetArgs,
-  Args4j,
-  Args4jBase
-}
-import org.bdgenomics.utils.instrumentation._
+import org.bdgenomics.formats.avro.{AlignmentRecord, Genotype, NucleotideContigFragment}
+import org.bdgenomics.utils.cli.{Args4j, Args4jBase, BDGCommandCompanion, BDGSparkCommand, ParquetArgs}
+import org.kohsuke.args4j.{Argument, Option => option}
 
 object Avocado extends BDGCommandCompanion {
 
@@ -215,14 +202,11 @@ class Avocado(protected val args: AvocadoArgs) extends BDGSparkCommand[AvocadoAr
     log.info("Post-processing variants.")
     val processedGenotypes: RDD[Genotype] = postProcessVariants(calledVariants, stats).flatMap(variantContext => variantContext.genotypes)
 
-    val newPartNum = processedGenotypes.partitioner match {
-      case Some(p) => if (p.numPartitions > 10) p.numPartitions / 10 else 10
-      case None => 10
-    }
+
     // save variants to output file
     log.info("Writing calls to disk.")
     SaveVariants.time {
-      processedGenotypes.coalesce(newPartNum).adamParquetSave(args.variantOutput,
+      processedGenotypes.repartition(10).adamParquetSave(args.variantOutput,
         args.blockSize,
         args.pageSize,
         args.compressionCodec,
