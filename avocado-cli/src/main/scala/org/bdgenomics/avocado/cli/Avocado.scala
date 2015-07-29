@@ -202,11 +202,11 @@ class Avocado(protected val args: AvocadoArgs) extends BDGSparkCommand[AvocadoAr
     log.info("Post-processing variants.")
     val processedGenotypes: RDD[Genotype] = postProcessVariants(calledVariants, stats).flatMap(variantContext => variantContext.genotypes)
 
-
+    val partNum = processedGenotypes.context.getConf.getOption("spark.executor.instances").getOrElse("10").toInt
     // save variants to output file
     log.info("Writing calls to disk.")
     SaveVariants.time {
-      processedGenotypes.repartition(10).adamParquetSave(args.variantOutput,
+      processedGenotypes.repartition(partNum).adamParquetSave(args.variantOutput,
         args.blockSize,
         args.pageSize,
         args.compressionCodec,
